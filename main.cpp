@@ -96,6 +96,7 @@ int main(int argc, char* args[])
 		bool quit = false;
 		SDL_Event e;
 
+		bool buttonDown = false;
 		//Enter game loop
 		while (!quit)
 		{
@@ -103,6 +104,8 @@ int main(int argc, char* args[])
 			{
 				//Handle events
 				if (e.type == SDL_QUIT) quit = true;
+				if (e.type == SDL_MOUSEBUTTONDOWN) buttonDown = true;
+				else if (SDL_MOUSEBUTTONUP) buttonDown = false;
 			}
 			//Clear screen
 			SDL_Renderer* pRenderer = MNCore::GetRenderer();
@@ -110,6 +113,9 @@ int main(int argc, char* args[])
 			SDL_RenderClear(pRenderer);
 
 			/* Game updates here */
+
+			if (buttonDown)
+				SDL_Log("down");
 
 			//Swap screen buffer
 			SDL_RenderPresent(pRenderer);
