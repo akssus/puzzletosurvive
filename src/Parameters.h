@@ -1,0 +1,13 @@
+#ifndef __PARAMETERS_H__
+#define __PARAMETERS_H__
+
+
+#define BOARD_POS_X						384
+#define BOARD_POS_Y						512
+#define BOARD_ELEMENT_OUTLINE_NUM		16
+#define BOARD_ELEMENT_INLINE_NUM		8
+#define BOARD_SIZE_WHOLE_RADIUS			200.0f
+#define BOARD_PARAM_RETURNING_SPEED		0.1f
+
+
+#endif
