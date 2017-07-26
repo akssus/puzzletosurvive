@@ -163,6 +163,9 @@ private:
 	void rollBoardInLine(unsigned int index, sf::Vector2f dir);
 	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
 
+private:
+	BoardFrameNode* getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode);
+
 	//void rollBoard
 
 

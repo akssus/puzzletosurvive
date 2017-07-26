@@ -413,17 +413,7 @@ void Board::update_pickup()
 			if (isMovedCertainDistance)
 			{
 				//choose which way to roll
-				BoardFrameNode* closestNode = &m_boardFrame.lstInlineFrameNodes[0];
-				float minDist = m_boardSizeInfo.wholeRad;
-				for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
-				{
-					float distance = abs(length(m_boardFrame.lstInlineFrameNodes[i].nodePos - m_vTouchPoint));
-					if (distance < minDist)
-					{
-						closestNode = &m_boardFrame.lstInlineFrameNodes[i];
-						minDist = distance;
-					}
-				}
+				BoardFrameNode* closestNode = getClosestFrameNodeFromPoint(m_vTouchPoint,true);
 				m_iCenterRollTo = closestNode->nodeID;
 				m_boardState = BOARD_STATE_ROLL;
 			}
@@ -453,25 +443,6 @@ void Board::update_pickup()
 		smoothReturnBoardInLine();
 		smoothReturnBoardOutLine();
 		smoothReturnBoardCenter();
-		//deal with smooth returning
-		/*
-		if (m_pPickedFrameNode.nodeLine == FRAMENODEPOS_CENTER)
-		{
-			smoothReturnBoardInLine();
-			smoothReturnBoardOutLine();
-		}
-		else if(m_pPickedFrameNode.nodeLine == FRAMENODEPOS_OUTLINE)
-		{
-			if (isPickedNodeAbleToRoll) //means odd number node
-			{
-
-			}
-		}
-		else //if picked node is inline
-		{
-
-		}
-		*/
 	}
 	else
 	{
@@ -593,3 +564,39 @@ void Board::update_supply()
 /************************************************************************************************/
 /************************************************************************************************/
 /************************************************************************************************/
+
+
+/***************************HELPERS**************************************************************/
+BoardFrameNode* Board::getClosestFrameNodeFromPoint(sf::Vector2f point, bool ignoreCenterNode = false)
+{
+	BoardFrameNode* closestNode = nullptr;
+	float minDist = m_boardSizeInfo.wholeRad;
+	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+	{
+		float distance = abs(length(m_boardFrame.lstInlineFrameNodes[i].nodePos - point));
+		if (distance < minDist)
+		{
+			closestNode = &m_boardFrame.lstInlineFrameNodes[i];
+			minDist = distance;
+		}
+	}
+	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
+	{
+		float distance = abs(length(m_boardFrame.lstOutlineFrameNodes[i].nodePos - point));
+		if (distance < minDist)
+		{
+			closestNode = &m_boardFrame.lstOutlineFrameNodes[i];
+			minDist = distance;
+		}
+	}
+	if (!ignoreCenterNode)
+	{
+		float distance = abs(length(m_boardFrame.centerNode.nodePos - point));
+		if (distance < minDist)
+		{
+			closestNode = &m_boardFrame.centerNode;
+			minDist = distance;
+		}
+	}
+	return closestNode;
+}
