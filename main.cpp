@@ -25,7 +25,7 @@ int main()
 		if (elapsedTime.asMilliseconds() > 1000.0f / 60.0f)
 		{
 
-			window.clear();
+			window.clear(sf::Color(255,255,255));
 			//window.draw(shape);
 			board.update();
 			board.render();

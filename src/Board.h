@@ -151,6 +151,9 @@ private:
 private:
 	void renderBoardElements(sf::RenderWindow* pWindow);
 	void resetBoardElementsPosition();
+	void resetBoardOutLineElementsPosition();
+	void resetBoardInLineElementsPosition();
+	void resetBoardCenterElementsPosition();
 	void smoothReturnBoardOutLine();
 	void smoothReturnBoardInLine();
 	void smoothReturnBoardCenter();
@@ -172,6 +175,7 @@ private:
 	float					m_fPickedElementRotatedAngle;
 	bool					m_bTouching;
 	sf::Vector2f			m_vTouchPoint;
+	sf::Vector2f			m_vTouchStartPoint;
 	sf::Vector2f			m_vPos;
 	unsigned int			m_iCenterRollTo;
 

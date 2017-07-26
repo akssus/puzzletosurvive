@@ -92,14 +92,26 @@ void Board::setPosition(sf::Vector2f pos)
 }
 void Board::resetBoardElementsPosition()
 {
+	resetBoardOutLineElementsPosition();
+	resetBoardInLineElementsPosition();
+	resetBoardCenterElementsPosition();
+}
+void Board::resetBoardOutLineElementsPosition()
+{
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
 		m_boardFrame.lstOutlineFrameNodes[i].value.pos = m_boardFrame.lstOutlineFrameNodes[i].nodePos;
 	}
+}
+void Board::resetBoardInLineElementsPosition()
+{
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
 		m_boardFrame.lstInlineFrameNodes[i].value.pos = m_boardFrame.lstInlineFrameNodes[i].nodePos;
 	}
+}
+void Board::resetBoardCenterElementsPosition()
+{
 	m_boardFrame.centerNode.value.pos = m_boardFrame.centerNode.nodePos;
 }
 
@@ -358,6 +370,10 @@ void Board::update_idle()
 				}
 			if (picked) {
 				//resetBoardElementsPosition();
+				m_vTouchStartPoint = m_vTouchPoint;
+				if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)		resetBoardOutLineElementsPosition();
+				else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)	resetBoardInLineElementsPosition();
+				else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)	resetBoardCenterElementsPosition();
 				m_boardState = BOARD_STATE_PICKUP;
 			}
 		}
@@ -378,28 +394,23 @@ void Board::update_pickup()
 		Vector2f originToTouch = m_vTouchPoint - this->m_vPos;
 		Vector2f originToNode = m_pPickedFrameNode->nodePos - this->m_vPos;
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
-		float originAngle = polarAngle(originToNode);
-		float movedAngle = polarAngle(originToTouch);
+		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
+		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+
+		float originAngle = polarAngle(originToFirstTouch);
+		float movedAngle = polarAngle(firstTouchToCurrentTouch);
 		float dAngle = movedAngle - originAngle;
-		float dLength = length(nodeToTouch);
-		float minAngle = 0.0f;
-		
-		//set minAngle
-		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
-		{
-			minAngle = m_boardSizeInfo.olAngleGap*0.3;
-		}
-		else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
-		{
-			minAngle = m_boardSizeInfo.ilAngleGap*0.5;
-		}
+		float dLength = length(firstTouchToCurrentTouch);
+
+		bool isPickedNodeAbleToRoll = (m_pPickedFrameNode->nodeID % 2 == 0) || (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE);
 
 		//check conditions to move other states
 		//center node only moves to roll state
 		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)
 		{
 			//if draged enough length then move to roll state of with center node
-			if (dLength > 5.0f)
+			bool isMovedCertainDistance = (dLength > 5.0f);
+			if (isMovedCertainDistance)
 			{
 				//choose which way to roll
 				BoardFrameNode* closestNode = &m_boardFrame.lstInlineFrameNodes[0];
@@ -419,54 +430,48 @@ void Board::update_pickup()
 		}
 		else //if the picked node is outline or inline node
 		{
-
-		}
-		if (abs(dAngle) > minAngle && m_pPickedFrameNode->nodeLine != FRAMENODEPOS_CENTER)
-		{
-			m_boardState = BOARD_STATE_ROTATE;
-		}
-		else if (dLength > m_boardSizeInfo.centerRad*0.5)
-		{
-			if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)
+			bool isMovedCertainDistance = (dLength > 5.0f);
+			if (isMovedCertainDistance)
 			{
-				BoardFrameNode* closestNode = &m_boardFrame.lstInlineFrameNodes[0];
-				float minDist = m_boardSizeInfo.wholeRad;
-				for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+				bool isRotatedAlongSideLine = (abs(dAngle) >= 45) && (abs(dAngle)<=135);
+				if (isRotatedAlongSideLine) //move to rotate
 				{
-					float distance = abs(length(m_boardFrame.lstInlineFrameNodes[i].nodePos - m_vTouchPoint));
-					if (distance < minDist)
+					m_boardState = BOARD_STATE_ROTATE;
+				}
+				else //moved to roll
+				{
+					if (isPickedNodeAbleToRoll)
 					{
-						closestNode = &m_boardFrame.lstInlineFrameNodes[i];
-						minDist = distance;
+						resetBoardElementsPosition();
+						m_boardState = BOARD_STATE_ROLL;
 					}
 				}
-				m_iCenterRollTo = closestNode->nodeID;
-				m_boardState = BOARD_STATE_ROLL;
-			}
-			else if (m_pPickedFrameNode->nodeID % 2 == 0 || m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
-			{
-				//resetBoardElementsPosition();
-				m_boardState = BOARD_STATE_ROLL;
-			}
-			else
-			{
-				m_boardState = BOARD_STATE_ROTATE;
 			}
 		}
-
-		if (m_pPickedFrameNode->nodeID % 2 == 1 && m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
+		if (isPickedNodeAbleToRoll)
+			m_pPickedFrameNode->value.pos = m_vTouchPoint - nodeToTouch;
+		smoothReturnBoardInLine();
+		smoothReturnBoardOutLine();
+		smoothReturnBoardCenter();
+		//deal with smooth returning
+		/*
+		if (m_pPickedFrameNode.nodeLine == FRAMENODEPOS_CENTER)
 		{
-			rotateBoardOutLine(dAngle);
-			smoothReturnBoardInLine();
-			smoothReturnBoardCenter();
-		}
-		else
-		{
-			m_pPickedFrameNode->value.pos = m_vTouchPoint;
 			smoothReturnBoardInLine();
 			smoothReturnBoardOutLine();
-			smoothReturnBoardCenter();
 		}
+		else if(m_pPickedFrameNode.nodeLine == FRAMENODEPOS_OUTLINE)
+		{
+			if (isPickedNodeAbleToRoll) //means odd number node
+			{
+
+			}
+		}
+		else //if picked node is inline
+		{
+
+		}
+		*/
 	}
 	else
 	{
@@ -481,32 +486,34 @@ void Board::update_rotate()
 		Vector2f originToTouch = m_vTouchPoint - this->m_vPos;
 		Vector2f originToNode = m_pPickedFrameNode->nodePos - this->m_vPos;
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
-		float originAngle = polarAngle(originToNode);
+		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
+		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+
+		float originAngle = polarAngle(originToFirstTouch);
 		float movedAngle = polarAngle(originToTouch);
 		float dAngle = movedAngle - originAngle;
-		float dLength = length(nodeToTouch);
-		float minAngle = 0.0f;
+		float dLength = length(firstTouchToCurrentTouch);
+
 
 		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
 		{
 			rotateBoardOutLine(dAngle);
 			smoothReturnBoardInLine();
 			smoothReturnBoardCenter();
-			minAngle = m_boardSizeInfo.olAngleGap*0.5;
 		}
 		else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
 		{
 			rotateBoardInLine(dAngle);
 			smoothReturnBoardOutLine();
 			smoothReturnBoardCenter();
-			minAngle = m_boardSizeInfo.ilAngleGap*0.5;
 		}
 		else //center
 		{
 			smoothReturnBoardInLine();
 			smoothReturnBoardOutLine();
 		}
-		if (abs(dAngle) < minAngle)
+		bool isNotGoingToRotate = (dLength <= 5.0f);
+		if (isNotGoingToRotate)
 		{
 			m_boardState = BOARD_STATE_PICKUP;
 		}
@@ -524,41 +531,44 @@ void Board::update_roll()
 		Vector2f originToTouch = m_vTouchPoint - this->m_vPos;
 		Vector2f originToNode = (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)?(m_boardFrame.lstInlineFrameNodes[m_iCenterRollTo].nodePos - this->m_vPos) : (m_pPickedFrameNode->nodePos - this->m_vPos);
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
-		float originAngle = polarAngle(originToNode);
+		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
+		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+
+		float originAngle = polarAngle(originToFirstTouch);
 		float movedAngle = polarAngle(originToTouch);
 		float dAngle = movedAngle - originAngle;
-		float minAngle = 0.0f;
-		Vector2f dir = projectedVector(nodeToTouch, originToNode);
+
+		Vector2f dir = -projectedVector(firstTouchToCurrentTouch, originToNode);
 		float dLength = length(dir);
 
 		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)
 		{
 			rollBoardCenter(m_iCenterRollTo, dir);
-			if (dLength < m_boardSizeInfo.centerRad*0.75)
+			bool isNotGoingToRoll = (dLength <= 5.0f);
+			if (isNotGoingToRoll)
+			{
 				m_boardState = BOARD_STATE_PICKUP;
+			}
 		}
 		else
 		{
 			if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
 			{
 				rollBoardOutLine(m_pPickedFrameNode->nodeID, dir);
-				minAngle = m_boardSizeInfo.olAngleGap * 0.3;
 			}
 			else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
 			{
 				rollBoardInLine(m_pPickedFrameNode->nodeID, dir);
-				minAngle = m_boardSizeInfo.ilAngleGap * 0.3;
 			}
 			//return to pickup state
-			if (dLength < m_boardSizeInfo.centerRad*0.75 && abs(dAngle) > minAngle)
-			{
-				m_boardState = BOARD_STATE_ROTATE;
-			}
-			else if (dLength < m_boardSizeInfo.centerRad*0.3)
+			bool isNotGoingToRoll = (dLength <= 5.0f);
+			if (isNotGoingToRoll)
 			{
 				m_boardState = BOARD_STATE_PICKUP;
 			}
 		}
+
+
 	}
 	else
 	{
