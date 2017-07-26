@@ -32,15 +32,15 @@ bool Board::init()
 	//set frame nodes position
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
-		float x = m_boardSizeInfo.outlineRad * sinf(2 * Pi / 16 * i);
-		float y = m_boardSizeInfo.outlineRad * cosf(2 * Pi / 16 * i);
+		float x = m_boardSizeInfo.outlineRad * cosf((2.0f * Pi / 16 * i) - (0.5f*Pi));
+		float y = m_boardSizeInfo.outlineRad * sinf((2.0f * Pi / 16 * i) - (0.5f*Pi));
 		m_boardFrame.lstOutlineFrameNodes[i].nodePos = Vector2f(x, y);
 		m_boardFrame.lstOutlineFrameNodes[i].nodeRad = m_boardSizeInfo.outlineElementRad;
 	}
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
-		float x = m_boardSizeInfo.inlineRad * sinf(2 * Pi / 8 * i);
-		float y = m_boardSizeInfo.inlineRad * cosf(2 * Pi / 8 * i);
+		float x = m_boardSizeInfo.inlineRad * cosf((2.0f * Pi / 8 * i) - (0.5f*Pi));
+		float y = m_boardSizeInfo.inlineRad * sinf((2.0f * Pi / 8 * i) - (0.5f*Pi));
 		m_boardFrame.lstInlineFrameNodes[i].nodePos = Vector2f(x, y);
 		m_boardFrame.lstInlineFrameNodes[i].nodeRad = m_boardSizeInfo.inlineElementRad;
 	}
@@ -395,7 +395,7 @@ void Board::update_pickup()
 		Vector2f originToNode = m_pPickedFrameNode->nodePos - this->m_vPos;
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
 		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
-		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+		Vector2f firstTouchToCurrentTouch = m_vTouchPoint - m_vTouchStartPoint;
 
 		float originAngle = polarAngle(originToFirstTouch);
 		float movedAngle = polarAngle(firstTouchToCurrentTouch);
@@ -413,8 +413,21 @@ void Board::update_pickup()
 			if (isMovedCertainDistance)
 			{
 				//choose which way to roll
-				BoardFrameNode* closestNode = getClosestFrameNodeFromPoint(m_vTouchPoint,true);
-				m_iCenterRollTo = closestNode->nodeID;
+				//BoardFrameNode* closestNode = getClosestFrameNodeFromPoint(,true);
+				float mouseMovedDirAngle = polarAngle(firstTouchToCurrentTouch) + 90;
+				if (mouseMovedDirAngle < 0)
+				{
+					mouseMovedDirAngle += 360;
+				}
+				m_iCenterRollTo = 0;
+				for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+				{
+					if (mouseMovedDirAngle <= m_boardSizeInfo.ilAngleGap*i + m_boardSizeInfo.ilAngleGap*0.5)
+					{
+						m_iCenterRollTo = i;
+						break;
+					}
+				}
 				m_boardState = BOARD_STATE_ROLL;
 			}
 		}
@@ -458,7 +471,7 @@ void Board::update_rotate()
 		Vector2f originToNode = m_pPickedFrameNode->nodePos - this->m_vPos;
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
 		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
-		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+		Vector2f firstTouchToCurrentTouch = m_vTouchPoint - m_vTouchStartPoint;
 
 		float originAngle = polarAngle(originToFirstTouch);
 		float movedAngle = polarAngle(originToTouch);
@@ -503,13 +516,13 @@ void Board::update_roll()
 		Vector2f originToNode = (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)?(m_boardFrame.lstInlineFrameNodes[m_iCenterRollTo].nodePos - this->m_vPos) : (m_pPickedFrameNode->nodePos - this->m_vPos);
 		Vector2f nodeToTouch = m_vTouchPoint - m_pPickedFrameNode->nodePos;
 		Vector2f originToFirstTouch = m_vTouchStartPoint - this->m_vPos;
-		Vector2f firstTouchToCurrentTouch = m_vTouchStartPoint - m_vTouchPoint;
+		Vector2f firstTouchToCurrentTouch = m_vTouchPoint - m_vTouchStartPoint;
 
 		float originAngle = polarAngle(originToFirstTouch);
 		float movedAngle = polarAngle(originToTouch);
 		float dAngle = movedAngle - originAngle;
 
-		Vector2f dir = -projectedVector(firstTouchToCurrentTouch, originToNode);
+		Vector2f dir = projectedVector(firstTouchToCurrentTouch, originToNode);
 		float dLength = length(dir);
 
 		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)
@@ -532,7 +545,7 @@ void Board::update_roll()
 				rollBoardInLine(m_pPickedFrameNode->nodeID, dir);
 			}
 			//return to pickup state
-			bool isNotGoingToRoll = (dLength <= 5.0f);
+			bool isNotGoingToRoll = (dLength < 5.0f);
 			if (isNotGoingToRoll)
 			{
 				m_boardState = BOARD_STATE_PICKUP;
