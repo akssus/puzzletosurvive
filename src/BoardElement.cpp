@@ -1,7 +1,9 @@
 #include "BoardElement.h"
 #include "SpriteManager.h"
 
-BoardElement::BoardElement() : rad(0.0f), m_type(BOARDELEMENTTYPE_EMPTY)
+using namespace sf;
+
+BoardElement::BoardElement() : rad(0.0f), m_type(BOARDELEMENTTYPE_EMPTY),isRotated(false)
 {
 
 }
@@ -23,6 +25,13 @@ void BoardElement::setElementType(ElementType type)
 	m_sprite.setOrigin(	m_sprite.getLocalBounds().width*0.5,
 						m_sprite.getLocalBounds().height*0.5);
 }
+
+void BoardElement::setSize(float width, float height)
+{
+	Vector2u tSize = m_sprite.getTexture()->getSize();
+	m_sprite.setScale(width / tSize.x, height / tSize.y);
+}
+
 const ElementType BoardElement::getType()
 {
 	return m_type;

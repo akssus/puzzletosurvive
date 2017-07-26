@@ -107,6 +107,8 @@ struct BoardFrame
 			lstInlineFrameNodes[i].nodeID = i;
 		}
 		centerNode.nodeLine = FRAMENODEPOS_CENTER;
+		
+		//leave for future update
 		for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 		{
 			//centerNode.addAdjacentNode(&lstInlineFrameNodes[i]);
@@ -116,13 +118,13 @@ struct BoardFrame
 
 enum BoardState
 {
-	BBSTATE_BOARD_IDLE,
-	BBSTATE_BOARD_PICKUP,
-	BBSTATE_BOARD_ROTATE,
-	BBSTATE_BOARD_ROLL,
-	BBSTATE_BOARD_CHECK_MATCH,
-	BBSTATE_BOARD_MATCHING,
-	BBSTATE_BOARD_SUPPLY
+	BOARD_STATE_IDLE,
+	BOARD_STATE_PICKUP,
+	BOARD_STATE_ROTATE,
+	BOARD_STATE_ROLL,
+	BOARD_STATE_CHECK_MATCH,
+	BOARD_STATE_MATCHING,
+	BOARD_STATE_SUPPLY
 };
 
 class Board
@@ -154,6 +156,10 @@ private:
 	void smoothReturnBoardCenter();
 	void rotateBoardOutLine(float dAngle);
 	void rotateBoardInLine(float dAngle);
+	void rollBoardOutLine(unsigned int index, sf::Vector2f dir);
+	void rollBoardInLine(unsigned int index, sf::Vector2f dir);
+	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
+
 	//void rollBoard
 
 
@@ -167,6 +173,7 @@ private:
 	bool					m_bTouching;
 	sf::Vector2f			m_vTouchPoint;
 	sf::Vector2f			m_vPos;
+	unsigned int			m_iCenterRollTo;
 
 };
 

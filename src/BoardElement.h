@@ -17,11 +17,13 @@ public:
 
 public:
 	void setElementType(ElementType type);
+	void setSize(float width, float height);
 	const ElementType getType();
 	void render(sf::RenderWindow* pWindow);
 public:
 	float				rad;
 	sf::Vector2f		pos;
+	bool				isRotated;
 
 private:
 	ElementType			m_type;
