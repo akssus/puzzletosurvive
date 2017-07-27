@@ -527,10 +527,23 @@ void Board::update_roll()
 			{
 				m_boardState = BOARD_STATE_PICKUP;
 			}
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad;
+			if (length(dir) > boardBorder)
+			{
+				setLength(dir,boardBorder);
+			}
 			rollBoardCenter(m_iCenterRollTo, dir);
 		}
 		else
 		{
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad;
+			if (length(originToNode+dir) > boardBorder)
+			{
+				if(dotProduct(dir,originToNode)<0)
+					setLength(dir, boardBorder + length(originToNode));
+				else
+					setLength(dir, boardBorder - length(originToNode));
+			}
 			if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
 			{
 				rollBoardOutLine(m_pPickedFrameNode->nodeID, dir);
