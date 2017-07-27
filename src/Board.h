@@ -164,6 +164,9 @@ private:
 	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
 
 private:
+	void shuffleBoardElements();
+
+private:
 	BoardFrameNode* getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
 	unsigned int getNodeIDOfCenterNodeDirected(float dirAngle);
 

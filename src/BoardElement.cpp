@@ -17,13 +17,32 @@ void BoardElement::setElementType(ElementType type)
 	switch (type)
 	{
 	case BOARDELEMENTTYPE_EMPTY:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
 		break;
 	case BOARDELEMENTTYPE_NORMAL:
 		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(255, 0, 0));
+		break;
+	case BOARDELEMENTTYPE_1:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(0, 255, 0));
+		break;
+	case BOARDELEMENTTYPE_2:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(0, 0, 255));
+		break;
+	case BOARDELEMENTTYPE_3:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(255, 255, 0));
+		break;
+	case BOARDELEMENTTYPE_4:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(255, 0, 255));
 		break;
 	}
 	m_sprite.setOrigin(	m_sprite.getLocalBounds().width*0.5,
 						m_sprite.getLocalBounds().height*0.5);
+	m_type = type;
 }
 
 void BoardElement::setSize(float width, float height)

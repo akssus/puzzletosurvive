@@ -51,7 +51,7 @@ bool Board::init()
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
 		BoardElement element;
-		element.setElementType(BOARDELEMENTTYPE_NORMAL);
+		element.setElementType(BOARDELEMENTTYPE_EMPTY);
 		element.pos = m_boardFrame.lstOutlineFrameNodes[i].nodePos;
 		element.rad = m_boardFrame.lstOutlineFrameNodes[i].nodeRad;
 		m_boardFrame.lstOutlineFrameNodes[i].value = element;
@@ -59,17 +59,19 @@ bool Board::init()
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
 		BoardElement element;
-		element.setElementType(BOARDELEMENTTYPE_NORMAL);
+		element.setElementType(BOARDELEMENTTYPE_EMPTY);
 		element.pos = m_boardFrame.lstInlineFrameNodes[i].nodePos;
 		element.rad = m_boardFrame.lstInlineFrameNodes[i].nodeRad;
 		m_boardFrame.lstInlineFrameNodes[i].value = element;
 	}
 	BoardElement element;
-	element.setElementType(BOARDELEMENTTYPE_NORMAL);
+	element.setElementType(BOARDELEMENTTYPE_EMPTY);
 	element.pos = m_boardFrame.centerNode.nodePos;
 	element.rad = m_boardFrame.centerNode.nodeRad;
 	m_boardFrame.centerNode.value = element;
 
+
+	shuffleBoardElements();
 	return true;
 }
 
@@ -282,6 +284,86 @@ void Board::rollBoardCenter(unsigned int toIndex, Vector2f dir)
 	ilFrame_1.value.isRotated = false;
 	ilFrame_2.value.isRotated = false;
 	centerFrame.value.isRotated = false;
+}
+
+/************************************************************************************************/
+/*********************************M E C H A N I C S**********************************************/
+/************************************************************************************************/
+void Board::shuffleBoardElements()
+{
+	//generate outline
+	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
+	{
+		bool typeFixed = false;
+		while (!typeFixed)
+		{
+			ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT-1);
+			unsigned int prevNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM - 1) % BOARD_ELEMENT_OUTLINE_NUM;
+			unsigned int nextNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM + 1) % BOARD_ELEMENT_OUTLINE_NUM;
+			BoardFrameNode* pPrevNode = &m_boardFrame.lstOutlineFrameNodes[prevNodeIndex];
+			BoardFrameNode* pNextNode = &m_boardFrame.lstOutlineFrameNodes[nextNodeIndex];
+			ElementType prevNodeType = pPrevNode->value.getType();
+			ElementType nextNodeType = pNextNode->value.getType();
+			if (randomType == prevNodeType && randomType == nextNodeType) continue;
+			else if (prevNodeType == randomType)
+			{
+				unsigned int prevPrevNodeIndex = (prevNodeIndex + BOARD_ELEMENT_OUTLINE_NUM - 1) % BOARD_ELEMENT_OUTLINE_NUM;
+				BoardFrameNode* pPrevPrevNode = &m_boardFrame.lstOutlineFrameNodes[prevPrevNodeIndex];
+				ElementType prevPrevNodeType = pPrevPrevNode->value.getType();
+				if (prevPrevNodeType == randomType) continue;
+			}
+			else if (nextNodeType == randomType)
+			{
+				unsigned int nextNextNodeIndex = (nextNodeIndex + BOARD_ELEMENT_OUTLINE_NUM + 1) % BOARD_ELEMENT_OUTLINE_NUM;
+				BoardFrameNode* pNextNextNode = &m_boardFrame.lstOutlineFrameNodes[nextNextNodeIndex];
+				ElementType nextNextNodeType = pNextNextNode->value.getType();
+				if (nextNextNodeType == randomType) continue;
+			}
+			//all condition matched
+			typeFixed = true;
+			m_boardFrame.lstOutlineFrameNodes[i].value.setElementType(randomType);
+		}
+	}
+	//generate inline
+	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+	{
+		bool typeFixed = false;
+		while (!typeFixed)
+		{
+			ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT-1);
+			unsigned int symmericNodeIndex = (i + 4) % BOARD_ELEMENT_INLINE_NUM;
+			BoardFrameNode* pSymmetricNode = &m_boardFrame.lstInlineFrameNodes[symmericNodeIndex];
+			ElementType symmetricNodeType = pSymmetricNode->value.getType();
+			if (symmetricNodeType == randomType) continue;
+
+			unsigned int prevNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM - 1) % BOARD_ELEMENT_INLINE_NUM;
+			unsigned int nextNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM + 1) % BOARD_ELEMENT_INLINE_NUM;
+			BoardFrameNode* pPrevNode = &m_boardFrame.lstInlineFrameNodes[prevNodeIndex];
+			BoardFrameNode* pNextNode = &m_boardFrame.lstInlineFrameNodes[nextNodeIndex];
+			ElementType prevNodeType = pPrevNode->value.getType();
+			ElementType nextNodeType = pNextNode->value.getType();
+			if (randomType == prevNodeType && randomType == nextNodeType) continue;
+			else if (prevNodeType == randomType)
+			{
+				unsigned int prevPrevNodeIndex = (prevNodeIndex + BOARD_ELEMENT_INLINE_NUM - 1) % BOARD_ELEMENT_INLINE_NUM;
+				BoardFrameNode* pPrevPrevNode = &m_boardFrame.lstInlineFrameNodes[prevPrevNodeIndex];
+				ElementType prevPrevNodeType = pPrevPrevNode->value.getType();
+				if (prevPrevNodeType == randomType) continue;
+			}
+			else if (nextNodeType == randomType)
+			{
+				unsigned int nextNextNodeIndex = (nextNodeIndex + BOARD_ELEMENT_INLINE_NUM + 1) % BOARD_ELEMENT_INLINE_NUM;
+				BoardFrameNode* pNextNextNode = &m_boardFrame.lstInlineFrameNodes[nextNextNodeIndex];
+				ElementType nextNextNodeType = pNextNextNode->value.getType();
+				if (nextNextNodeType == randomType) continue;
+			}
+			//all condition matched
+			typeFixed = true;
+			m_boardFrame.lstInlineFrameNodes[i].value.setElementType(randomType);
+		}
+	}
+	ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT - 1);
+	m_boardFrame.centerNode.value.setElementType(randomType);
 }
 /************************************************************************************************/
 /*********************************R E N D E R I N G**********************************************/
