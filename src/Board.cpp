@@ -424,7 +424,12 @@ void Board::update_pickup()
 				{
 					mouseMovedDirAngle += 360;
 				}
-				m_iCenterRollTo = getNodeIDOfCenterNodeDirected(mouseMovedDirAngle);
+				unsigned int nodeToRoll = getNodeIDOfCenterNodeDirected(mouseMovedDirAngle);
+				if (m_iCenterRollTo != nodeToRoll)
+				{
+					m_iCenterRollTo = nodeToRoll;
+					resetBoardElementsPosition();
+				}
 
 				Vector2f dir = projectedVector(firstTouchToCurrentTouch, m_boardFrame.lstInlineFrameNodes[m_iCenterRollTo].nodePos - this->m_vPos);
 				rollBoardCenter(m_iCenterRollTo, dir);
@@ -451,9 +456,15 @@ void Board::update_pickup()
 		}
 		/*if (isPickedNodeAbleToRoll)
 			m_pPickedFrameNode->value.pos = m_vTouchPoint - nodeToTouch;*/
-		smoothReturnBoardInLine();
-		smoothReturnBoardOutLine();
-		smoothReturnBoardCenter();
+		if (m_pPickedFrameNode->nodeLine != FRAMENODEPOS_CENTER)
+		{
+			smoothReturnBoardInLine();
+			smoothReturnBoardOutLine();
+			smoothReturnBoardCenter();
+		}
+		//smoothReturnBoardInLine();
+		//smoothReturnBoardOutLine();
+		//smoothReturnBoardCenter();
 	}
 	else
 	{
@@ -527,7 +538,7 @@ void Board::update_roll()
 			{
 				m_boardState = BOARD_STATE_PICKUP;
 			}
-			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad;
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.5;
 			if (length(dir) > boardBorder)
 			{
 				setLength(dir,boardBorder);
@@ -536,7 +547,7 @@ void Board::update_roll()
 		}
 		else
 		{
-			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad;
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.5;
 			if (length(originToNode+dir) > boardBorder)
 			{
 				if(dotProduct(dir,originToNode)<0)
@@ -560,9 +571,6 @@ void Board::update_roll()
 				m_boardState = BOARD_STATE_PICKUP;
 			}
 		}
-		smoothReturnBoardInLine();
-		smoothReturnBoardOutLine();
-		smoothReturnBoardCenter();
 	}
 	else
 	{
