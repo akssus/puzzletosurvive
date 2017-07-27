@@ -362,8 +362,31 @@ void Board::shuffleBoardElements()
 			m_boardFrame.lstInlineFrameNodes[i].value.setElementType(randomType);
 		}
 	}
-	ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT - 1);
-	m_boardFrame.centerNode.value.setElementType(randomType);
+	bool generatingSuccess = false;
+	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+	{
+		ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT - 1);
+		BoardFrameNode* pOutLineNode = &m_boardFrame.lstOutlineFrameNodes[i * 2];
+		BoardFrameNode* pInLineNode = &m_boardFrame.lstInlineFrameNodes[i];
+		ElementType outLineElementType = pOutLineNode->value.getType();
+		ElementType inLineElementType = pInLineNode->value.getType();
+		if (randomType == outLineElementType && randomType == inLineElementType) continue;
+		else
+		{
+			generatingSuccess = true;
+			m_boardFrame.centerNode.value.setElementType(randomType);
+			break;
+		}
+	}
+	if(!generatingSuccess) shuffleBoardElements(); //do once again
+}
+
+std::list<ChainBunch> Board::getChainedNodesInBoard()
+{
+	bool isOutlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
+	bool isinlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
+	bool isCenterNodeActivated = true;
+
 }
 /************************************************************************************************/
 /*********************************R E N D E R I N G**********************************************/

@@ -127,6 +127,11 @@ enum BoardState
 	BOARD_STATE_SUPPLY
 };
 
+struct ChainBunch
+{
+	std::list<BoardFrameNode*> chainedNodes;
+};
+
 class Board
 {
 public:
@@ -164,11 +169,12 @@ private:
 	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
 
 private:
-	void shuffleBoardElements();
+	void					shuffleBoardElements();
+	std::list<ChainBunch>	getChainedNodesInBoard();
 
 private:
-	BoardFrameNode* getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
-	unsigned int getNodeIDOfCenterNodeDirected(float dirAngle);
+	BoardFrameNode*		getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
+	unsigned int		getNodeIDOfCenterNodeDirected(float dirAngle);
 
 	//void rollBoard
 
