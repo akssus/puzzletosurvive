@@ -164,7 +164,8 @@ private:
 	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
 
 private:
-	BoardFrameNode* getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode);
+	BoardFrameNode* getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
+	unsigned int getNodeIDOfCenterNodeDirected(float dirAngle);
 
 	//void rollBoard
 
@@ -179,6 +180,7 @@ private:
 	bool					m_bTouching;
 	sf::Vector2f			m_vTouchPoint;
 	sf::Vector2f			m_vTouchStartPoint;
+	sf::Vector2f			m_vLastTouchPoint;
 	sf::Vector2f			m_vPos;
 	unsigned int			m_iCenterRollTo;
 
