@@ -505,7 +505,8 @@ void Board::update_rotate()
 			smoothReturnBoardInLine();
 			smoothReturnBoardOutLine();
 		}
-		bool isNotGoingToRotate = (dLength <= 5.0f);
+		float dl = length(m_pPickedFrameNode->nodePos - m_pPickedFrameNode->value.pos);
+		bool isNotGoingToRotate = (dl <= 5.0f);//(dLength <= 5.0f);
 		if (isNotGoingToRotate)
 		{
 			m_boardState = BOARD_STATE_PICKUP;
@@ -538,7 +539,7 @@ void Board::update_roll()
 			{
 				m_boardState = BOARD_STATE_PICKUP;
 			}
-			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.5;
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.3;
 			if (length(dir) > boardBorder)
 			{
 				setLength(dir,boardBorder);
@@ -547,7 +548,7 @@ void Board::update_roll()
 		}
 		else
 		{
-			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.5;
+			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.3;
 			if (length(originToNode+dir) > boardBorder)
 			{
 				if(dotProduct(dir,originToNode)<0)
