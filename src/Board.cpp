@@ -242,11 +242,14 @@ void Board::rollBoardOutLine(unsigned int index, Vector2f dir)
 	BoardFrameNode& ilFrame_2 = m_boardFrame.lstInlineFrameNodes[ilNodeIndex_2];
 	BoardFrameNode& centerFrame = m_boardFrame.centerNode;
 
-	olFrame_1.value.pos = olFrame_1.nodePos + dir;
-	olFrame_2.value.pos = olFrame_2.nodePos + dir;
-	ilFrame_1.value.pos = ilFrame_1.nodePos + dir;
-	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
-	centerFrame.value.pos = centerFrame.nodePos + dir;
+	if (dir != Vector2f())
+	{
+		olFrame_1.value.pos = olFrame_1.nodePos + dir; //base
+		ilFrame_1.value.pos = olFrame_1.value.pos - unitVector(olFrame_1.nodePos - m_vPos)*(ilFrame_1.value.getRad() + olFrame_1.value.getRad());
+		centerFrame.value.pos = ilFrame_1.value.pos - unitVector(olFrame_1.nodePos - m_vPos)*(ilFrame_1.value.getRad() + centerFrame.value.getRad());
+		ilFrame_2.value.pos = centerFrame.value.pos - unitVector(olFrame_1.nodePos - m_vPos)*(centerFrame.value.getRad() + ilFrame_2.value.getRad());
+		olFrame_2.value.pos = ilFrame_2.value.pos - unitVector(olFrame_1.nodePos - m_vPos)*(ilFrame_2.value.getRad() + olFrame_2.value.getRad());
+	}
 
 	//the equation is too complicated. need to optimize.
 	float borderLength = m_boardSizeInfo.wholeRad + m_boardSizeInfo.outlineElementRad; //+(m_boardSizeInfo.outlineElementRad + m_boardSizeInfo.inlineElementRad) / 2;
@@ -298,12 +301,15 @@ void Board::rollBoardInLine(unsigned int index, Vector2f dir)
 	BoardFrameNode& ilFrame_2 = m_boardFrame.lstInlineFrameNodes[ilNodeIndex_2];
 	BoardFrameNode& centerFrame = m_boardFrame.centerNode;
 
-	olFrame_1.value.pos = olFrame_1.nodePos + dir;
-	olFrame_2.value.pos = olFrame_2.nodePos + dir;
-	ilFrame_1.value.pos = ilFrame_1.nodePos + dir;
-	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
-	centerFrame.value.pos = centerFrame.nodePos + dir;
-
+	if (dir != Vector2f())
+	{
+		ilFrame_1.value.pos = ilFrame_1.nodePos + dir; //base
+		olFrame_1.value.pos = ilFrame_1.value.pos + unitVector(ilFrame_1.nodePos-m_vPos)*(ilFrame_1.value.getRad() + olFrame_1.value.getRad());
+		centerFrame.value.pos = ilFrame_1.value.pos - unitVector(ilFrame_1.nodePos - m_vPos)*(ilFrame_1.value.getRad() + centerFrame.value.getRad());
+		ilFrame_2.value.pos = centerFrame.value.pos - unitVector(ilFrame_1.nodePos - m_vPos)*(centerFrame.value.getRad() + ilFrame_2.value.getRad());
+		olFrame_2.value.pos = ilFrame_2.value.pos - unitVector(ilFrame_1.nodePos - m_vPos)*(ilFrame_2.value.getRad() + olFrame_2.value.getRad());
+	}
+	
 	//the equation is too complicated. need to optimize.
 	float borderLength = m_boardSizeInfo.wholeRad + m_boardSizeInfo.outlineElementRad; //+(m_boardSizeInfo.outlineElementRad + m_boardSizeInfo.inlineElementRad) / 2;
 	Vector2f originToBorder = unitVector(dir)*borderLength;
@@ -354,12 +360,14 @@ void Board::rollBoardCenter(unsigned int toIndex, Vector2f dir)
 	BoardFrameNode& ilFrame_2 = m_boardFrame.lstInlineFrameNodes[ilNodeIndex_2];
 	BoardFrameNode& centerFrame = m_boardFrame.centerNode;
 
-	olFrame_1.value.pos = olFrame_1.nodePos + dir;
-	olFrame_2.value.pos = olFrame_2.nodePos + dir;
-	ilFrame_1.value.pos = ilFrame_1.nodePos + dir;
-	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
-	centerFrame.value.pos = centerFrame.nodePos + dir;
-	
+	if (dir != Vector2f())
+	{
+		centerFrame.value.pos = centerFrame.nodePos + dir; //base
+		ilFrame_1.value.pos = centerFrame.value.pos + unitVector(dir)*(centerFrame.value.getRad() + ilFrame_1.value.getRad());
+		olFrame_1.value.pos = ilFrame_1.value.pos + unitVector(dir)*(ilFrame_1.value.getRad() + olFrame_1.value.getRad());
+		ilFrame_2.value.pos = centerFrame.value.pos - unitVector(dir)*(centerFrame.value.getRad() + ilFrame_2.value.getRad());
+		olFrame_2.value.pos = ilFrame_2.value.pos - unitVector(dir)*(ilFrame_2.value.getRad() + olFrame_2.value.getRad());
+	}
 	//the equation is too complicated. need to optimize.
 	if (dir != Vector2f())
 	{
@@ -684,6 +692,7 @@ void Board::update_idle()
 	smoothReturnBoardOutLine();
 	smoothReturnBoardInLine();
 	smoothReturnBoardCenter();
+	adjustElementsSize();
 }
 void Board::update_pickup()
 {
@@ -838,7 +847,7 @@ void Board::update_roll()
 			{
 				m_boardState = BOARD_STATE_PICKUP;
 			}
-			float boardBorder = m_boardSizeInfo.wholeRad + m_pPickedFrameNode->nodeRad*0.3;
+			float boardBorder = m_boardSizeInfo.wholeRad;// +m_pPickedFrameNode->nodeRad*0.3;
 			if (length(dir) > boardBorder)
 			{
 				setLength(dir,boardBorder);
