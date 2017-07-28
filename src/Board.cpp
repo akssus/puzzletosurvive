@@ -331,7 +331,7 @@ void Board::shuffleBoardElements()
 		while (!typeFixed)
 		{
 			ElementType randomType = (ElementType)random(1, BOARDELEMENTTYPE_TOTAL_COUNT-1);
-			unsigned int symmericNodeIndex = (i + 4) % BOARD_ELEMENT_INLINE_NUM;
+			unsigned int symmericNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM/2) % BOARD_ELEMENT_INLINE_NUM;
 			BoardFrameNode* pSymmetricNode = &m_boardFrame.lstInlineFrameNodes[symmericNodeIndex];
 			ElementType symmetricNodeType = pSymmetricNode->value.getType();
 			if (symmetricNodeType == randomType) continue;
@@ -380,13 +380,92 @@ void Board::shuffleBoardElements()
 	}
 	if(!generatingSuccess) shuffleBoardElements(); //do once again
 }
-
+void Board::getSameTypeOfAdjacents(BoardFrameNode* base, ChainBunch* container)
+{
+	ElementType baseNodeElementType = base->value.getType();
+	for (BoardFrameNode* pAdjacentNode : base->adjacentNodes)
+	{
+		if (pAdjacentNode->value.getType() == baseNodeElementType)
+		{
+			if (std::count(container->chainedNodes.begin(), container->chainedNodes.end(), pAdjacentNode) == 0)
+			{
+				container->chainedNodes.push_back(pAdjacentNode);
+				getSameTypeOfAdjacents(pAdjacentNode, container);
+			}
+		}
+	}
+}
 std::list<ChainBunch> Board::getChainedNodesInBoard()
 {
 	bool isOutlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
-	bool isinlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
+	bool isInlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
 	bool isCenterNodeActivated = true;
+	std::list<ChainBunch> lstChainBunch;
 
+	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
+	{
+		if (isOutlineNodeActivated[i] == false) continue;
+
+		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM - 1) % BOARD_ELEMENT_OUTLINE_NUM;
+		unsigned int nextNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM + 1) % BOARD_ELEMENT_OUTLINE_NUM;
+		unsigned int lowerNodeIndex = i / 2;
+		BoardFrameNode* pPrevNode = &m_boardFrame.lstOutlineFrameNodes[prevNodeIndex];
+		BoardFrameNode* pNextNode = &m_boardFrame.lstOutlineFrameNodes[nextNodeIndex];
+		BoardFrameNode* pLowerNode = &m_boardFrame.lstOutlineFrameNodes[lowerNodeIndex];
+		ElementType prevNodeType = pPrevNode->value.getType();
+		ElementType nextNodeType = pNextNode->value.getType();
+		ElementType lowerNodeType = pLowerNode->value.getType();
+		ElementType centerNodeType = m_boardFrame.centerNode.value.getType();
+		ElementType currentNodeType = m_boardFrame.lstOutlineFrameNodes[i].value.getType();
+
+		if ((prevNodeIndex == currentNodeType && nextNodeIndex == currentNodeType) || (lowerNodeIndex == currentNodeType && centerNodeType == currentNodeType))
+		{
+			ChainBunch newChain;
+			getSameTypeOfAdjacents(&m_boardFrame.lstOutlineFrameNodes[i],&newChain);
+			lstChainBunch.push_back(newChain);
+			for (BoardFrameNode* frameNode : newChain.chainedNodes)
+			{
+				if (frameNode->nodeLine == FRAMENODEPOS_OUTLINE)
+					isOutlineNodeActivated[frameNode->nodeID] = false;
+				else if (frameNode->nodeLine == FRAMENODEPOS_INLINE)
+					isInlineNodeActivated[frameNode->nodeID] = false;
+				else if (frameNode->nodeLine == FRAMENODEPOS_CENTER)
+					isCenterNodeActivated = false;
+			}
+		}
+	}
+	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+	{
+		if (isInlineNodeActivated[i] == false) continue;
+
+		unsigned int symmericNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM/2) % BOARD_ELEMENT_INLINE_NUM;
+		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM - 1) % BOARD_ELEMENT_INLINE_NUM;
+		unsigned int nextNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM + 1) % BOARD_ELEMENT_INLINE_NUM;
+		BoardFrameNode* pPrevNode = &m_boardFrame.lstInlineFrameNodes[prevNodeIndex];
+		BoardFrameNode* pNextNode = &m_boardFrame.lstInlineFrameNodes[nextNodeIndex];
+		BoardFrameNode* pSymmetricNode = &m_boardFrame.lstInlineFrameNodes[symmericNodeIndex];
+		ElementType prevNodeType = pPrevNode->value.getType();
+		ElementType nextNodeType = pNextNode->value.getType();
+		ElementType symmetricNodeType = pSymmetricNode->value.getType();
+		ElementType centerNodeType = m_boardFrame.centerNode.value.getType();
+		ElementType currentNodeType = m_boardFrame.lstInlineFrameNodes[i].value.getType();
+
+		if ((prevNodeIndex == currentNodeType && nextNodeIndex == currentNodeType) || (centerNodeType == currentNodeType && symmetricNodeType == currentNodeType))
+		{
+			ChainBunch newChain;
+			getSameTypeOfAdjacents(&m_boardFrame.lstInlineFrameNodes[i], &newChain);
+			lstChainBunch.push_back(newChain);
+			for (BoardFrameNode* frameNode : newChain.chainedNodes)
+			{
+				if (frameNode->nodeLine == FRAMENODEPOS_INLINE)
+					isInlineNodeActivated[frameNode->nodeID] = false;
+				else if (frameNode->nodeLine == FRAMENODEPOS_CENTER)
+					isCenterNodeActivated = false;
+			}
+		}
+	}
+	//center node dont need to check
+	return lstChainBunch;
 }
 /************************************************************************************************/
 /*********************************R E N D E R I N G**********************************************/
@@ -544,7 +623,7 @@ void Board::update_pickup()
 			bool isMovedCertainDistance = (dLength > 5.0f);
 			if (isMovedCertainDistance)
 			{
-				bool isRotatedAlongSideLine = (abs(dAngle) >= 45) && (abs(dAngle)<=135);
+				bool isRotatedAlongSideLine = ((abs(dAngle) >= 45) && (abs(dAngle)<=135))|| ((abs(dAngle) >= 225) && (abs(dAngle) <= 315));
 				if (isRotatedAlongSideLine) //move to rotate
 				{
 					m_boardState = BOARD_STATE_ROTATE;

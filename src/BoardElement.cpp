@@ -39,6 +39,14 @@ void BoardElement::setElementType(ElementType type)
 		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
 		m_sprite.setColor(sf::Color(255, 0, 255));
 		break;
+	case BOARDELEMENTTYPE_5:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(0, 255, 255));
+		break;
+	case BOARDELEMENTTYPE_6:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(255, 255, 255));
+		break;
 	}
 	m_sprite.setOrigin(	m_sprite.getLocalBounds().width*0.5,
 						m_sprite.getLocalBounds().height*0.5);

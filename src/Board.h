@@ -106,13 +106,12 @@ struct BoardFrame
 			lstInlineFrameNodes[i].nodeLine = FRAMENODEPOS_INLINE;
 			lstInlineFrameNodes[i].nodeID = i;
 		}
-		centerNode.nodeLine = FRAMENODEPOS_CENTER;
-		
-		//leave for future update
 		for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 		{
-			//centerNode.addAdjacentNode(&lstInlineFrameNodes[i]);
+			//center node is bidirectional
+			centerNode.addAdjacentNode(&lstInlineFrameNodes[i]);
 		}
+		centerNode.nodeLine = FRAMENODEPOS_CENTER;
 	}
 };
 
@@ -171,6 +170,7 @@ private:
 private:
 	void					shuffleBoardElements();
 	std::list<ChainBunch>	getChainedNodesInBoard();
+	void					getSameTypeOfAdjacents(BoardFrameNode* base, ChainBunch* container);
 
 private:
 	BoardFrameNode*		getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
