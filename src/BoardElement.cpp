@@ -58,6 +58,14 @@ void BoardElement::setSize(float width, float height)
 	Vector2u tSize = m_sprite.getTexture()->getSize();
 	m_sprite.setScale(width / tSize.x, height / tSize.y);
 }
+void BoardElement::setRad(float rad)
+{
+	this->rad = rad;
+}
+float BoardElement::getRad()
+{
+	return rad;
+}
 
 const ElementType BoardElement::getType()
 {

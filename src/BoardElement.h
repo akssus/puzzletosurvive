@@ -25,14 +25,16 @@ public:
 public:
 	void setElementType(ElementType type);
 	void setSize(float width, float height);
+	float getRad();
+	void setRad(float rad);
 	const ElementType getType();
 	void render(sf::RenderWindow* pWindow);
 public:
-	float				rad;
 	sf::Vector2f		pos;
 	bool				isRotated;
 
 private:
+	float				rad;
 	ElementType			m_type;
 	sf::Sprite			m_sprite;
 };

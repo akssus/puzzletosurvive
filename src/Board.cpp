@@ -53,7 +53,7 @@ bool Board::init()
 		BoardElement element;
 		element.setElementType(BOARDELEMENTTYPE_EMPTY);
 		element.pos = m_boardFrame.lstOutlineFrameNodes[i].nodePos;
-		element.rad = m_boardFrame.lstOutlineFrameNodes[i].nodeRad;
+		element.setRad(m_boardFrame.lstOutlineFrameNodes[i].nodeRad);
 		m_boardFrame.lstOutlineFrameNodes[i].value = element;
 	}
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
@@ -61,13 +61,13 @@ bool Board::init()
 		BoardElement element;
 		element.setElementType(BOARDELEMENTTYPE_EMPTY);
 		element.pos = m_boardFrame.lstInlineFrameNodes[i].nodePos;
-		element.rad = m_boardFrame.lstInlineFrameNodes[i].nodeRad;
+		element.setRad(m_boardFrame.lstInlineFrameNodes[i].nodeRad);
 		m_boardFrame.lstInlineFrameNodes[i].value = element;
 	}
 	BoardElement element;
 	element.setElementType(BOARDELEMENTTYPE_EMPTY);
 	element.pos = m_boardFrame.centerNode.nodePos;
-	element.rad = m_boardFrame.centerNode.nodeRad;
+	element.setRad(m_boardFrame.centerNode.nodeRad);
 	m_boardFrame.centerNode.value = element;
 
 
@@ -187,6 +187,27 @@ void Board::smoothReturnBoardCenter()
 		m_boardFrame.centerNode.value.pos += dir* BOARD_PARAM_RETURNING_SPEED;
 	}
 }
+void Board::adjustElementsSize()
+{
+	float constA = 0.0008419;
+	float constB = -0.3327;
+	float constC = m_boardSizeInfo.centerRad;
+	for (BoardFrameNode& frameNode : m_boardFrame.lstOutlineFrameNodes)
+	{
+		float originToElementLength = length(frameNode.value.pos - this->m_vPos);
+		float elementRad = constA * pow(originToElementLength,2) + constB*originToElementLength + constC;
+		frameNode.value.setRad(elementRad);
+	}
+	for (BoardFrameNode& frameNode : m_boardFrame.lstInlineFrameNodes)
+	{
+		float originToElementLength = length(frameNode.value.pos - this->m_vPos);
+		float elementRad = constA * pow(originToElementLength, 2) + constB*originToElementLength + constC;
+		frameNode.value.setRad(elementRad);
+	}
+	float originToElementLength = length(m_boardFrame.centerNode.value.pos - this->m_vPos);
+	float elementRad = constA * pow(originToElementLength, 2) + constB*originToElementLength + constC;
+	m_boardFrame.centerNode.value.setRad(elementRad);
+}
 void Board::rotateBoardOutLine(float dAngle)
 {
 	Vector2f rotatedPos;
@@ -227,6 +248,36 @@ void Board::rollBoardOutLine(unsigned int index, Vector2f dir)
 	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
 	centerFrame.value.pos = centerFrame.nodePos + dir;
 
+	//the equation is too complicated. need to optimize.
+	float borderLength = m_boardSizeInfo.wholeRad + m_boardSizeInfo.outlineElementRad; //+(m_boardSizeInfo.outlineElementRad + m_boardSizeInfo.inlineElementRad) / 2;
+	Vector2f originToBorder = unitVector(dir)*borderLength;
+
+	if (length(olFrame_1.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (olFrame_1.value.pos - this->m_vPos) - originToBorder;
+		olFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(olFrame_2.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (olFrame_2.value.pos - this->m_vPos) - originToBorder;
+		olFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(ilFrame_1.value.pos - this->m_vPos) > borderLength) 
+	{
+		Vector2f overBorderedVector = (ilFrame_1.value.pos - this->m_vPos) - originToBorder;
+		ilFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(ilFrame_2.value.pos - this->m_vPos) > borderLength) 
+	{
+		Vector2f overBorderedVector = (ilFrame_2.value.pos - this->m_vPos) - originToBorder;
+		ilFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(centerFrame.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (centerFrame.value.pos - this->m_vPos) - originToBorder;
+		centerFrame.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+
 	olFrame_1.value.isRotated = false;
 	olFrame_2.value.isRotated = false;
 	ilFrame_1.value.isRotated = false;
@@ -253,6 +304,36 @@ void Board::rollBoardInLine(unsigned int index, Vector2f dir)
 	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
 	centerFrame.value.pos = centerFrame.nodePos + dir;
 
+	//the equation is too complicated. need to optimize.
+	float borderLength = m_boardSizeInfo.wholeRad + m_boardSizeInfo.outlineElementRad; //+(m_boardSizeInfo.outlineElementRad + m_boardSizeInfo.inlineElementRad) / 2;
+	Vector2f originToBorder = unitVector(dir)*borderLength;
+
+	if (length(olFrame_1.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (olFrame_1.value.pos - this->m_vPos) - originToBorder;
+		olFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(olFrame_2.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (olFrame_2.value.pos - this->m_vPos) - originToBorder;
+		olFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(ilFrame_1.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (ilFrame_1.value.pos - this->m_vPos) - originToBorder;
+		ilFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(ilFrame_2.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (ilFrame_2.value.pos - this->m_vPos) - originToBorder;
+		ilFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+	if (length(centerFrame.value.pos - this->m_vPos) > borderLength)
+	{
+		Vector2f overBorderedVector = (centerFrame.value.pos - this->m_vPos) - originToBorder;
+		centerFrame.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+	}
+
 	olFrame_1.value.isRotated = false;
 	olFrame_2.value.isRotated = false;
 	ilFrame_1.value.isRotated = false;
@@ -278,6 +359,39 @@ void Board::rollBoardCenter(unsigned int toIndex, Vector2f dir)
 	ilFrame_1.value.pos = ilFrame_1.nodePos + dir;
 	ilFrame_2.value.pos = ilFrame_2.nodePos + dir;
 	centerFrame.value.pos = centerFrame.nodePos + dir;
+	
+	//the equation is too complicated. need to optimize.
+	if (dir != Vector2f())
+	{
+		float borderLength = m_boardSizeInfo.wholeRad + m_boardSizeInfo.outlineElementRad; //+(m_boardSizeInfo.outlineElementRad + m_boardSizeInfo.inlineElementRad) / 2;
+		Vector2f originToBorder = unitVector(dir)*borderLength;
+
+		if (length(olFrame_1.value.pos - this->m_vPos) > borderLength)
+		{
+			Vector2f overBorderedVector = (olFrame_1.value.pos - this->m_vPos) - originToBorder;
+			olFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+		}
+		if (length(olFrame_2.value.pos - this->m_vPos) > borderLength)
+		{
+			Vector2f overBorderedVector = (olFrame_2.value.pos - this->m_vPos) - originToBorder;
+			olFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+		}
+		if (length(ilFrame_1.value.pos - this->m_vPos) > borderLength)
+		{
+			Vector2f overBorderedVector = (ilFrame_1.value.pos - this->m_vPos) - originToBorder;
+			ilFrame_1.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+		}
+		if (length(ilFrame_2.value.pos - this->m_vPos) > borderLength)
+		{
+			Vector2f overBorderedVector = (ilFrame_2.value.pos - this->m_vPos) - originToBorder;
+			ilFrame_2.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+		}
+		if (length(centerFrame.value.pos - this->m_vPos) > borderLength)
+		{
+			Vector2f overBorderedVector = (centerFrame.value.pos - this->m_vPos) - originToBorder;
+			centerFrame.value.pos = -originToBorder + this->m_vPos + overBorderedVector;
+		}
+	}
 
 	olFrame_1.value.isRotated = false;
 	olFrame_2.value.isRotated = false;
@@ -482,17 +596,17 @@ void Board::renderBoardElements(sf::RenderWindow* pWindow)
 	float size = 0.0f;
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
-		size = m_boardFrame.lstOutlineFrameNodes[i].nodeRad*2;
+		size = m_boardFrame.lstOutlineFrameNodes[i].value.getRad()*2;
 		m_boardFrame.lstOutlineFrameNodes[i].value.setSize(size,size);
 		m_boardFrame.lstOutlineFrameNodes[i].value.render(pWindow);
 	}
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
-		size = m_boardFrame.lstInlineFrameNodes[i].nodeRad*2;
+		size = m_boardFrame.lstInlineFrameNodes[i].value.getRad() *2;
 		m_boardFrame.lstInlineFrameNodes[i].value.setSize(size, size);
 		m_boardFrame.lstInlineFrameNodes[i].value.render(pWindow);
 	}
-	size = m_boardFrame.centerNode.nodeRad*2;
+	size = m_boardFrame.centerNode.value.getRad() *2;
 	m_boardFrame.centerNode.value.setSize(size, size);
 	m_boardFrame.centerNode.value.render(pWindow);
 }
@@ -649,6 +763,7 @@ void Board::update_pickup()
 		//smoothReturnBoardInLine();
 		//smoothReturnBoardOutLine();
 		//smoothReturnBoardCenter();
+		adjustElementsSize();
 	}
 	else
 	{
@@ -756,6 +871,7 @@ void Board::update_roll()
 				m_boardState = BOARD_STATE_PICKUP;
 			}
 		}
+		adjustElementsSize();
 	}
 	else
 	{

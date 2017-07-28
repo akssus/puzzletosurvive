@@ -48,7 +48,7 @@ void setLength(sf::Vector2<T>& vector, T newLength)
 template <typename T>
 sf::Vector2<T> unitVector(const sf::Vector2<T>& vector)
 {
-	assert(vector != sf::Vector2<T>());
+	//assert(vector != sf::Vector2<T>());
 	return vector / length(vector);
 }
 

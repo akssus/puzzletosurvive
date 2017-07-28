@@ -161,6 +161,7 @@ private:
 	void smoothReturnBoardOutLine();
 	void smoothReturnBoardInLine();
 	void smoothReturnBoardCenter();
+	void adjustElementsSize();
 	void rotateBoardOutLine(float dAngle);
 	void rotateBoardInLine(float dAngle);
 	void rollBoardOutLine(unsigned int index, sf::Vector2f dir);
