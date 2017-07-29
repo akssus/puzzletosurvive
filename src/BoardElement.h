@@ -23,16 +23,18 @@ public:
 	~BoardElement();
 
 public:
-	void setElementType(ElementType type);
-	void setSize(float width, float height);
-	float getRad();
-	void setRad(float rad);
-	const ElementType getType();
+	void				setElementType(ElementType type);
+	void				setSize(float width, float height);
+	float				getRad();
+	void				setRad(float rad);
+	const ElementType	getType();
+
+	void destroy();
 	void render(sf::RenderWindow* pWindow);
 public:
 	sf::Vector2f		pos;
 	bool				isRotated;
-
+	bool				isDestroyed;
 private:
 	float				rad;
 	ElementType			m_type;

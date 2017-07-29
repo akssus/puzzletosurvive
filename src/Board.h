@@ -167,6 +167,9 @@ private:
 	void rollBoardOutLine(unsigned int index, sf::Vector2f dir);
 	void rollBoardInLine(unsigned int index, sf::Vector2f dir);
 	void rollBoardCenter(unsigned int toIndex, sf::Vector2f dir);
+	void pushBoardOutLineCW(unsigned int pushDistance);
+	void pushBoardInLineCW(unsigned int pushDistance);
+	void pushBoardRail(unsigned int pushDistance, std::vector<BoardFrameNode*>& candidateNodes);
 
 private:
 	void					shuffleBoardElements();
@@ -174,8 +177,10 @@ private:
 	void					getSameTypeOfAdjacents(BoardFrameNode* base, ChainBunch* container);
 
 private:
-	BoardFrameNode*		getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
-	unsigned int		getNodeIDOfCenterNodeDirected(float dirAngle);
+	BoardFrameNode*					getClosestFrameNodeFromPoint(sf::Vector2f , bool ignoreCenterNode, bool ignoreOutlineNode, bool ignoreInlineNode);
+	unsigned int					getNodeIDOfCenterNodeDirected(float dirAngle);
+	std::vector<BoardFrameNode*>	getRailOfOutlineNodeIndex(unsigned int index);
+	unsigned int					getLinearDistanceBetweenNodes(BoardFrameNode* node_1, BoardFrameNode* node_2);
 
 	//void rollBoard
 
@@ -193,6 +198,7 @@ private:
 	sf::Vector2f			m_vLastTouchPoint;
 	sf::Vector2f			m_vPos;
 	unsigned int			m_iCenterRollTo;
+	std::list<ChainBunch>	m_lstChainedBunches;
 
 };
 

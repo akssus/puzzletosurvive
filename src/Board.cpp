@@ -228,7 +228,6 @@ void Board::rotateBoardInLine(float dAngle)
 		m_boardFrame.lstInlineFrameNodes[i].value.pos = rotatedPos + this->m_vPos;
 	}
 }
-
 void Board::rollBoardOutLine(unsigned int index, Vector2f dir)
 {
 	unsigned int olNodeIndex_1 = index;
@@ -287,7 +286,6 @@ void Board::rollBoardOutLine(unsigned int index, Vector2f dir)
 	ilFrame_2.value.isRotated = false;
 	centerFrame.value.isRotated = false;
 }
-
 void Board::rollBoardInLine(unsigned int index, Vector2f dir)
 {
 	unsigned int ilNodeIndex_1 = index;
@@ -346,7 +344,6 @@ void Board::rollBoardInLine(unsigned int index, Vector2f dir)
 	ilFrame_2.value.isRotated = false;
 	centerFrame.value.isRotated = false;
 }
-
 void Board::rollBoardCenter(unsigned int toIndex, Vector2f dir)
 {
 	unsigned int ilNodeIndex_1 = toIndex;
@@ -406,6 +403,50 @@ void Board::rollBoardCenter(unsigned int toIndex, Vector2f dir)
 	ilFrame_1.value.isRotated = false;
 	ilFrame_2.value.isRotated = false;
 	centerFrame.value.isRotated = false;
+}
+void Board::pushBoardOutLineCW(unsigned int pushDistance)
+{
+	unsigned int count = pushDistance;
+	while (count--)
+	{
+		for (int i = (BOARD_ELEMENT_OUTLINE_NUM - 1); i > 0; --i)
+		{
+			BoardElement tempElement = m_boardFrame.lstOutlineFrameNodes[i].value;
+			unsigned int prev_i = (i - 1 + BOARD_ELEMENT_OUTLINE_NUM) % BOARD_ELEMENT_OUTLINE_NUM;
+			m_boardFrame.lstOutlineFrameNodes[i].value = m_boardFrame.lstOutlineFrameNodes[prev_i].value;
+			m_boardFrame.lstOutlineFrameNodes[prev_i].value = tempElement;
+		}
+	}
+}
+void Board::pushBoardInLineCW(unsigned int pushDistance)
+{
+	unsigned int count = pushDistance;
+	while (count--)
+	{
+		for (int i = (BOARD_ELEMENT_INLINE_NUM - 1); i > 0; --i)
+		{
+			BoardElement tempElement = m_boardFrame.lstInlineFrameNodes[i].value;
+			unsigned int prev_i = (i - 1 + BOARD_ELEMENT_INLINE_NUM) % BOARD_ELEMENT_INLINE_NUM;
+			m_boardFrame.lstInlineFrameNodes[i].value = m_boardFrame.lstInlineFrameNodes[prev_i].value;
+			m_boardFrame.lstInlineFrameNodes[prev_i].value = tempElement;
+		}
+	}
+}
+void Board::pushBoardRail(unsigned int pushDistance, std::vector<BoardFrameNode*>& candidateNodes)
+{
+	unsigned int count = pushDistance;
+	unsigned int size = candidateNodes.size();
+	while (count--)
+	{
+		for (int i = 0; i < size-1; ++i)
+		{
+			BoardElement tempElement = candidateNodes[i]->value;
+			unsigned int next_i = (i + 1 + size) % size;
+			candidateNodes[i]->value = candidateNodes[next_i]->value;
+			candidateNodes[next_i]->value = tempElement;
+		}
+
+	}
 }
 
 /************************************************************************************************/
@@ -519,46 +560,48 @@ void Board::getSameTypeOfAdjacents(BoardFrameNode* base, ChainBunch* container)
 }
 std::list<ChainBunch> Board::getChainedNodesInBoard()
 {
-	bool isOutlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
-	bool isInlineNodeActivated[BOARD_ELEMENT_OUTLINE_NUM] = { true, };
-	bool isCenterNodeActivated = true;
+	bool isOutlineNodeDeactivated[BOARD_ELEMENT_OUTLINE_NUM] = { false, };
+	bool isInlineNodeDeactivated[BOARD_ELEMENT_OUTLINE_NUM] = { false, };
+	bool isCenterNodeDeactivated = false;
 	std::list<ChainBunch> lstChainBunch;
 
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
-		if (isOutlineNodeActivated[i] == false) continue;
+		if (isOutlineNodeDeactivated[i] == true) continue;
 
 		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM - 1) % BOARD_ELEMENT_OUTLINE_NUM;
 		unsigned int nextNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM + 1) % BOARD_ELEMENT_OUTLINE_NUM;
 		unsigned int lowerNodeIndex = i / 2;
 		BoardFrameNode* pPrevNode = &m_boardFrame.lstOutlineFrameNodes[prevNodeIndex];
 		BoardFrameNode* pNextNode = &m_boardFrame.lstOutlineFrameNodes[nextNodeIndex];
-		BoardFrameNode* pLowerNode = &m_boardFrame.lstOutlineFrameNodes[lowerNodeIndex];
+		BoardFrameNode* pLowerNode = &m_boardFrame.lstInlineFrameNodes[lowerNodeIndex];
 		ElementType prevNodeType = pPrevNode->value.getType();
 		ElementType nextNodeType = pNextNode->value.getType();
 		ElementType lowerNodeType = pLowerNode->value.getType();
 		ElementType centerNodeType = m_boardFrame.centerNode.value.getType();
 		ElementType currentNodeType = m_boardFrame.lstOutlineFrameNodes[i].value.getType();
+		bool isOddNode = (i+1) % 2;
 
-		if ((prevNodeIndex == currentNodeType && nextNodeIndex == currentNodeType) || (lowerNodeIndex == currentNodeType && centerNodeType == currentNodeType))
+		if ((prevNodeType == currentNodeType && nextNodeType == currentNodeType) || (lowerNodeType == currentNodeType && centerNodeType == currentNodeType && isOddNode) )
 		{
 			ChainBunch newChain;
+			newChain.chainedNodes.push_back(&m_boardFrame.lstOutlineFrameNodes[i]);
 			getSameTypeOfAdjacents(&m_boardFrame.lstOutlineFrameNodes[i],&newChain);
 			lstChainBunch.push_back(newChain);
 			for (BoardFrameNode* frameNode : newChain.chainedNodes)
 			{
 				if (frameNode->nodeLine == FRAMENODEPOS_OUTLINE)
-					isOutlineNodeActivated[frameNode->nodeID] = false;
+					isOutlineNodeDeactivated[frameNode->nodeID] = true;
 				else if (frameNode->nodeLine == FRAMENODEPOS_INLINE)
-					isInlineNodeActivated[frameNode->nodeID] = false;
+					isInlineNodeDeactivated[frameNode->nodeID] = true;
 				else if (frameNode->nodeLine == FRAMENODEPOS_CENTER)
-					isCenterNodeActivated = false;
+					isCenterNodeDeactivated = true;;
 			}
 		}
 	}
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
-		if (isInlineNodeActivated[i] == false) continue;
+		if (isInlineNodeDeactivated[i] == true) continue;
 
 		unsigned int symmericNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM/2) % BOARD_ELEMENT_INLINE_NUM;
 		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM - 1) % BOARD_ELEMENT_INLINE_NUM;
@@ -572,17 +615,18 @@ std::list<ChainBunch> Board::getChainedNodesInBoard()
 		ElementType centerNodeType = m_boardFrame.centerNode.value.getType();
 		ElementType currentNodeType = m_boardFrame.lstInlineFrameNodes[i].value.getType();
 
-		if ((prevNodeIndex == currentNodeType && nextNodeIndex == currentNodeType) || (centerNodeType == currentNodeType && symmetricNodeType == currentNodeType))
+		if ((prevNodeType == currentNodeType && nextNodeType == currentNodeType) || (centerNodeType == currentNodeType && symmetricNodeType == currentNodeType))
 		{
 			ChainBunch newChain;
+			newChain.chainedNodes.push_back(&m_boardFrame.lstInlineFrameNodes[i]);
 			getSameTypeOfAdjacents(&m_boardFrame.lstInlineFrameNodes[i], &newChain);
 			lstChainBunch.push_back(newChain);
 			for (BoardFrameNode* frameNode : newChain.chainedNodes)
 			{
 				if (frameNode->nodeLine == FRAMENODEPOS_INLINE)
-					isInlineNodeActivated[frameNode->nodeID] = false;
+					isInlineNodeDeactivated[frameNode->nodeID] = true;
 				else if (frameNode->nodeLine == FRAMENODEPOS_CENTER)
-					isCenterNodeActivated = false;
+					isCenterNodeDeactivated = true;
 			}
 		}
 	}
@@ -823,7 +867,29 @@ void Board::update_rotate()
 	else
 	{
 		//check whether moved elements
-		m_boardState = BOARD_STATE_IDLE;
+		bool isReposed = false;
+		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
+		{
+			BoardFrameNode* pMovedNode = getClosestFrameNodeFromPoint(m_pPickedFrameNode->value.pos, true, false, true);
+			if (pMovedNode != m_pPickedFrameNode)
+			{
+				unsigned int movedDistance = (pMovedNode->nodeID - m_pPickedFrameNode->nodeID + BOARD_ELEMENT_OUTLINE_NUM) % BOARD_ELEMENT_OUTLINE_NUM;
+				pushBoardOutLineCW(movedDistance);
+				isReposed = true;
+			}
+		}
+		else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
+		{
+			BoardFrameNode* pMovedNode = getClosestFrameNodeFromPoint(m_pPickedFrameNode->value.pos, true, true, false);
+			if (pMovedNode != m_pPickedFrameNode)
+			{
+				unsigned int movedDistance = (pMovedNode->nodeID - m_pPickedFrameNode->nodeID + BOARD_ELEMENT_INLINE_NUM) % BOARD_ELEMENT_INLINE_NUM;
+				pushBoardInLineCW(movedDistance);
+				isReposed = true;
+			}
+		}
+		if(isReposed) m_boardState = BOARD_STATE_CHECK_MATCH;
+		else m_boardState = BOARD_STATE_IDLE;
 	}
 }
 void Board::update_roll()
@@ -885,16 +951,49 @@ void Board::update_roll()
 	else
 	{
 		//check whether moved elements
-		m_boardState = BOARD_STATE_IDLE;
+		BoardFrameNode* pMovedNode = getClosestFrameNodeFromPoint(m_pPickedFrameNode->value.pos, false, false, false);
+		//unsigned int movedDistance = getLinearDistanceBetweenNodes(m_pPickedFrameNode, pMovedNode);
+		unsigned int movedDistance = (getLinearDistanceBetweenNodes(m_pPickedFrameNode, pMovedNode) + 5) % 5;
+		//hard cording
+		if (pMovedNode != m_pPickedFrameNode)
+		{
+			unsigned int nodeIndex = 0;
+			if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_CENTER)
+			{
+				nodeIndex = m_iCenterRollTo * 2;
+			}
+			else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
+			{
+				nodeIndex = m_pPickedFrameNode->nodeID;
+			}
+			else if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_INLINE)
+			{
+				nodeIndex = m_pPickedFrameNode->nodeID*2;
+			}
+			std::vector<BoardFrameNode*> candidateNodes = getRailOfOutlineNodeIndex(nodeIndex);
+			pushBoardRail(movedDistance, candidateNodes);
+			m_boardState = BOARD_STATE_CHECK_MATCH;
+		}
+		else m_boardState = BOARD_STATE_IDLE;
 	}
 }
 void Board::update_check_match()
 {
-
+	m_lstChainedBunches = getChainedNodesInBoard();
+	if (m_lstChainedBunches.size() > 0) 
+		m_boardState = BOARD_STATE_MATCHING;
+	else 
+		m_boardState = BOARD_STATE_IDLE;
 }
 void Board::update_matching()
 {
-
+	for (ChainBunch bunch : m_lstChainedBunches)
+	{
+		for (BoardFrameNode* frameNode : bunch.chainedNodes)
+		{
+			frameNode->value.setSize
+		}
+	}
 }
 void Board::update_supply()
 
@@ -963,4 +1062,59 @@ unsigned int Board::getNodeIDOfCenterNodeDirected(float dirAngle)
 		}
 	}
 	return retID;
+}
+
+std::vector<BoardFrameNode*> Board::getRailOfOutlineNodeIndex(unsigned int index)
+{
+	std::vector<BoardFrameNode*> rail;
+	unsigned int olNodeIndex_1 = index;
+	unsigned int olNodeIndex_2 = (olNodeIndex_1 + BOARD_ELEMENT_OUTLINE_NUM / 2) % BOARD_ELEMENT_OUTLINE_NUM;
+	unsigned int ilNodeIndex_1 = olNodeIndex_1 / 2;
+	unsigned int ilNodeIndex_2 = (ilNodeIndex_1 + BOARD_ELEMENT_INLINE_NUM / 2) % BOARD_ELEMENT_INLINE_NUM;
+
+	rail.push_back(&m_boardFrame.lstOutlineFrameNodes[olNodeIndex_1]);
+	rail.push_back(&m_boardFrame.lstInlineFrameNodes[ilNodeIndex_1]);
+	rail.push_back(&m_boardFrame.centerNode);
+	rail.push_back(&m_boardFrame.lstInlineFrameNodes[ilNodeIndex_2]);
+	rail.push_back(&m_boardFrame.lstOutlineFrameNodes[olNodeIndex_2]);
+	
+	return rail;
+}
+
+unsigned int Board::getLinearDistanceBetweenNodes(BoardFrameNode* node_1, BoardFrameNode* node_2)
+{
+	unsigned int distance = 0;
+	if(node_1->nodeLine == FRAMENODEPOS_OUTLINE)
+	{
+		if (node_1->nodeLine == node_2->nodeLine)
+		{
+			if (node_1->nodeID != node_2->nodeID) distance = -4;
+		}
+		else if (node_2->nodeLine == FRAMENODEPOS_INLINE)
+		{
+			if (node_1->nodeID == node_2->nodeID * 2) distance = -1;
+			else distance = -3;
+		}
+		else if (node_2->nodeLine == FRAMENODEPOS_CENTER) distance = -2;
+	}
+	else if (node_1->nodeLine == FRAMENODEPOS_INLINE)
+	{
+		if (node_1->nodeLine == node_2->nodeLine)
+		{
+			if (node_1->nodeID != node_2->nodeID) distance = -2;
+		}
+		else if (node_2->nodeLine == FRAMENODEPOS_OUTLINE)
+		{
+			if (node_1->nodeID*2 == node_2->nodeID) distance = 1;
+			else distance = -3;
+		}
+		else if (node_2->nodeLine == FRAMENODEPOS_CENTER) distance = -1;
+
+	}
+	else if (node_1->nodeLine == FRAMENODEPOS_CENTER)
+	{
+		if (node_2->nodeLine == FRAMENODEPOS_OUTLINE) distance = 2;
+		else if (node_2->nodeLine == FRAMENODEPOS_INLINE) distance = 1;
+	}
+	return distance;
 }

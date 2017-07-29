@@ -3,7 +3,7 @@
 
 using namespace sf;
 
-BoardElement::BoardElement() : rad(0.0f), m_type(BOARDELEMENTTYPE_EMPTY),isRotated(false)
+BoardElement::BoardElement() : rad(0.0f), m_type(BOARDELEMENTTYPE_EMPTY),isRotated(false),isDestroyed(false)
 {
 
 }
@@ -72,8 +72,13 @@ const ElementType BoardElement::getType()
 	return m_type;
 }
 
+void BoardElement::destroy()
+{
+
+}
 void BoardElement::render(sf::RenderWindow* pWindow)
 {
 	m_sprite.setPosition(this->pos);
-	pWindow->draw(m_sprite);
+	if(this->m_type != BOARDELEMENTTYPE_EMPTY)
+		pWindow->draw(m_sprite);
 }
