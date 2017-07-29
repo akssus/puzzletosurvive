@@ -2,6 +2,7 @@
 #define __BOARD_H__
 
 #include "SFML/Graphics.hpp"
+#include "SFML/Audio.hpp"
 #include "Thor/Math.hpp"
 #include "Thor/Vectors.hpp"
 #include "BoardElement.h"
@@ -201,6 +202,12 @@ private:
 	sf::Vector2f			m_vPos;
 	unsigned int			m_iCenterRollTo;
 	std::list<ChainBunch>	m_lstChainedBunches;
+
+	//this only uses in prototype
+	sf::SoundBuffer m_sndBlipBuffer;
+	sf::SoundBuffer m_sndPopBuffer;
+	sf::Sound		m_sndBlip;
+	sf::Sound		m_sndPop;
 
 };
 

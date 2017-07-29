@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include "src/SpriteManager.h"
 #include "src/Board.h"
 
 int main()
@@ -9,6 +10,9 @@ int main()
 	
 	Board board(&window);
 	board.setPosition(sf::Vector2f(250,250));
+
+	sf::Sprite bg = SpriteManager::getInstance()->createSprite("res/bg.png");
+	bg.setScale(5.0f, 5.0f);
 
 
 	sf::Clock clock;
@@ -28,6 +32,7 @@ int main()
 			window.clear(sf::Color(255,255,255));
 			//window.draw(shape);
 			board.update();
+			window.draw(bg);
 			board.render();
 			window.display();
 			clock.restart();

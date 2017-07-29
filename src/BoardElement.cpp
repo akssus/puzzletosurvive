@@ -18,46 +18,46 @@ void BoardElement::setElementType(ElementType type)
 	switch (type)
 	{
 	case BOARDELEMENTTYPE_EMPTY:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		break;
 	case BOARDELEMENTTYPE_NORMAL:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(255, 0, 0));
 		break;
 	case BOARDELEMENTTYPE_1:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(0, 255, 0));
 		break;
 	case BOARDELEMENTTYPE_2:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(0, 0, 255));
 		break;
 	case BOARDELEMENTTYPE_3:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(255, 255, 0));
 		break;
 	case BOARDELEMENTTYPE_4:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(255, 0, 255));
 		break;
 	case BOARDELEMENTTYPE_5:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(0, 255, 255));
 		break;
 	case BOARDELEMENTTYPE_6:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(255, 255, 255));
 		break;
 	case BOARDELEMENTTYPE_7:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(125, 125, 125));
 		break;
 	case BOARDELEMENTTYPE_8:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(233, 15, 100));
 		break;
 	case BOARDELEMENTTYPE_9:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
 		m_sprite.setColor(sf::Color(100, 255, 100));
 		break;
 	}

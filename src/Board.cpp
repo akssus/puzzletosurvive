@@ -11,6 +11,12 @@ Board::Board(sf::RenderWindow* pWindow):m_pPickedFrameNode(nullptr),m_iCenterRol
 {
 	m_pWindow = pWindow;
 	init();
+	//////////temp//////////////
+	m_sndBlipBuffer.loadFromFile("res/blip.wav");
+	m_sndPopBuffer.loadFromFile("res/pop.wav");
+	m_sndBlip.setBuffer(m_sndBlipBuffer);
+	m_sndPop.setBuffer(m_sndPopBuffer);
+	///////////////////////
 }
 Board::~Board()
 {
@@ -843,10 +849,14 @@ void Board::update_pickup()
 		//smoothReturnBoardCenter();
 		adjustElementsSize();
 	}
+	//released mouse button
 	else
 	{
 		//check whether moved elements
 		m_boardState = BOARD_STATE_IDLE;
+
+		//only proto
+		m_sndBlip.play();
 	}
 }
 void Board::update_rotate()
@@ -889,8 +899,12 @@ void Board::update_rotate()
 			m_boardState = BOARD_STATE_PICKUP;
 		}
 	}
+	//released mouse button
 	else
 	{
+		//only proto
+		m_sndBlip.play();
+
 		//check whether moved elements
 		bool isReposed = false;
 		if (m_pPickedFrameNode->nodeLine == FRAMENODEPOS_OUTLINE)
@@ -914,7 +928,10 @@ void Board::update_rotate()
 			}
 		}
 		if(isReposed) m_boardState = BOARD_STATE_CHECK_MATCH;
-		else m_boardState = BOARD_STATE_IDLE;
+		else
+		{
+			m_boardState = BOARD_STATE_IDLE;
+		}
 	}
 }
 void Board::update_roll()
@@ -973,8 +990,12 @@ void Board::update_roll()
 		}
 		adjustElementsSize();
 	}
+	//released mouse button
 	else
 	{
+		//only proto
+		m_sndBlip.play();
+
 		//check whether moved elements
 		BoardFrameNode* pMovedNode = getClosestFrameNodeFromPoint(m_pPickedFrameNode->value.pos, false, false, false);
 		//unsigned int movedDistance = getLinearDistanceBetweenNodes(m_pPickedFrameNode, pMovedNode);
@@ -999,14 +1020,20 @@ void Board::update_roll()
 			pushBoardRail(movedDistance, candidateNodes);
 			m_boardState = BOARD_STATE_CHECK_MATCH;
 		}
-		else m_boardState = BOARD_STATE_IDLE;
+		else
+		{
+			m_boardState = BOARD_STATE_IDLE;
+		}
 	}
 }
 void Board::update_check_match()
 {
 	m_lstChainedBunches = getChainedNodesInBoard();
-	if (m_lstChainedBunches.size() > 0) 
+	if (m_lstChainedBunches.size() > 0)
+	{
 		m_boardState = BOARD_STATE_MATCHING;
+		m_sndPop.play();
+	}
 	else 
 		m_boardState = BOARD_STATE_IDLE;
 
@@ -1057,8 +1084,12 @@ void Board::update_supply()
 		frameNode->value.isRotated = false;
 		frameNode->value.isDestroyed = false;
 	}
-
 	m_boardState = BOARD_STATE_CHECK_MATCH;
+
+	smoothReturnBoardInLine();
+	smoothReturnBoardOutLine();
+	smoothReturnBoardCenter();
+	adjustElementsSize();
 }
 
 /************************************************************************************************/
