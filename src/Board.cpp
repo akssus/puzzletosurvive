@@ -7,7 +7,7 @@
 using namespace thor;
 using namespace sf;
 
-Board::Board(sf::RenderWindow* pWindow):m_pPickedFrameNode(nullptr),m_iCenterRollTo(0)
+Board::Board(sf::RenderWindow* pWindow):m_pPickedFrameNode(nullptr),m_iCenterRollTo(0),m_iSleepTime(0)
 {
 	m_pWindow = pWindow;
 	init();
@@ -711,6 +711,7 @@ void Board::update()
 	case BOARD_STATE_CHECK_MATCH: update_check_match(); break;
 	case BOARD_STATE_MATCHING: update_matching(); break;
 	case BOARD_STATE_SUPPLY: update_supply(); break;
+	case BOARD_STATE_SLEEP: update_sleep(); break;
 	}
 
 	m_vLastTouchPoint = m_vTouchPoint;
@@ -1084,14 +1085,25 @@ void Board::update_supply()
 		frameNode->value.isRotated = false;
 		frameNode->value.isDestroyed = false;
 	}
-	m_boardState = BOARD_STATE_CHECK_MATCH;
+	m_iSleepTime = 0;
+	m_boardState = BOARD_STATE_SLEEP;
 
 	smoothReturnBoardInLine();
 	smoothReturnBoardOutLine();
 	smoothReturnBoardCenter();
 	adjustElementsSize();
 }
+void Board::update_sleep()
+{
+	m_iSleepTime++;
+	if(m_iSleepTime > 30)
+		m_boardState = BOARD_STATE_CHECK_MATCH;
 
+	smoothReturnBoardInLine();
+	smoothReturnBoardOutLine();
+	smoothReturnBoardCenter();
+	adjustElementsSize();
+}
 /************************************************************************************************/
 /************************************************************************************************/
 /************************************************************************************************/

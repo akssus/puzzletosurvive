@@ -124,7 +124,8 @@ enum BoardState
 	BOARD_STATE_ROLL,
 	BOARD_STATE_CHECK_MATCH,
 	BOARD_STATE_MATCHING,
-	BOARD_STATE_SUPPLY
+	BOARD_STATE_SUPPLY,
+	BOARD_STATE_SLEEP
 };
 
 struct ChainBunch
@@ -152,6 +153,7 @@ private:
 	void update_check_match();
 	void update_matching();
 	void update_supply();
+	void update_sleep();
 
 private:
 	void renderBoardElements(sf::RenderWindow* pWindow);
@@ -195,6 +197,7 @@ private:
 	BoardInfo				m_boardSizeInfo;
 	BoardFrameNode*			m_pPickedFrameNode;
 	float					m_fPickedElementRotatedAngle;
+	int						m_iSleepTime;
 	bool					m_bTouching;
 	sf::Vector2f			m_vTouchPoint;
 	sf::Vector2f			m_vTouchStartPoint;

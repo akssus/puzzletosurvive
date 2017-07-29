@@ -50,15 +50,7 @@ void BoardElement::setElementType(ElementType type)
 		break;
 	case BOARDELEMENTTYPE_7:
 		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
-		m_sprite.setColor(sf::Color(125, 125, 125));
-		break;
-	case BOARDELEMENTTYPE_8:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
-		m_sprite.setColor(sf::Color(233, 15, 100));
-		break;
-	case BOARDELEMENTTYPE_9:
-		m_sprite = SpriteManager::getInstance()->createSprite("res/node.png");
-		m_sprite.setColor(sf::Color(100, 255, 100));
+		m_sprite.setColor(sf::Color(100, 100, 125));
 		break;
 	}
 	m_sprite.setOrigin(	m_sprite.getLocalBounds().width*0.5,
