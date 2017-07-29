@@ -98,8 +98,8 @@ struct BoardFrame
 			int iRightNode = (i + BOARD_ELEMENT_INLINE_NUM + 1) % BOARD_ELEMENT_INLINE_NUM;
 			lstInlineFrameNodes[i].addAdjacentNode(&lstInlineFrameNodes[iLeftNode]);
 			lstInlineFrameNodes[i].addAdjacentNode(&lstInlineFrameNodes[iRightNode]);
-			//bind to outline elements (does it really need??)
-			//if (i % 2 == 0)	lstInlineFrameNodes[i].addAdjacentNode(&lstInlineFrameNodes[i / 2]);
+			//bind to outline elements
+			if (i % 2 == 0)	lstInlineFrameNodes[i].addAdjacentNode(&lstInlineFrameNodes[i / 2]);
 			//bind to center element
 			lstInlineFrameNodes[i].addAdjacentNode(&centerNode);
 			//set line id
@@ -170,6 +170,7 @@ private:
 	void pushBoardOutLineCW(unsigned int pushDistance);
 	void pushBoardInLineCW(unsigned int pushDistance);
 	void pushBoardRail(unsigned int pushDistance, std::vector<BoardFrameNode*>& candidateNodes);
+	void dropOutlineNodeToEmptyInlineNode();
 
 private:
 	void					shuffleBoardElements();
@@ -181,6 +182,7 @@ private:
 	unsigned int					getNodeIDOfCenterNodeDirected(float dirAngle);
 	std::vector<BoardFrameNode*>	getRailOfOutlineNodeIndex(unsigned int index);
 	unsigned int					getLinearDistanceBetweenNodes(BoardFrameNode* node_1, BoardFrameNode* node_2);
+	std::list<BoardFrameNode*>		getEmptyNodes();
 
 	//void rollBoard
 

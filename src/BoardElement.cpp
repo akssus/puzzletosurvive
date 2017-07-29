@@ -1,5 +1,6 @@
 #include "BoardElement.h"
 #include "SpriteManager.h"
+#include "Thor/Math.hpp"
 
 using namespace sf;
 
@@ -47,10 +48,28 @@ void BoardElement::setElementType(ElementType type)
 		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
 		m_sprite.setColor(sf::Color(255, 255, 255));
 		break;
+	case BOARDELEMENTTYPE_7:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(125, 125, 125));
+		break;
+	case BOARDELEMENTTYPE_8:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(233, 15, 100));
+		break;
+	case BOARDELEMENTTYPE_9:
+		m_sprite = SpriteManager::getInstance()->createSprite("res/ball.png");
+		m_sprite.setColor(sf::Color(100, 255, 100));
+		break;
 	}
 	m_sprite.setOrigin(	m_sprite.getLocalBounds().width*0.5,
 						m_sprite.getLocalBounds().height*0.5);
 	m_type = type;
+}
+
+void BoardElement::setWithRandomType()
+{
+	ElementType randomType = (ElementType)thor::random(1, BOARDELEMENTTYPE_TOTAL_COUNT - 1);
+	setElementType(randomType);
 }
 
 void BoardElement::setSize(float width, float height)
@@ -74,7 +93,18 @@ const ElementType BoardElement::getType()
 
 void BoardElement::destroy()
 {
-
+	//simple animation
+	sf::Color color = m_sprite.getColor();
+	int alpha = color.a;
+	alpha -= 5;
+	if (alpha < 0)
+	{
+		alpha = 0;
+		isDestroyed = true;
+		this->setElementType(BOARDELEMENTTYPE_EMPTY);
+	}
+	color.a = alpha;
+	m_sprite.setColor(color);
 }
 void BoardElement::render(sf::RenderWindow* pWindow)
 {

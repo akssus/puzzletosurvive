@@ -196,17 +196,21 @@ void Board::adjustElementsSize()
 	{
 		float originToElementLength = length(frameNode.value.pos - this->m_vPos);
 		float elementRad = constA * pow(originToElementLength,2) + constB*originToElementLength + constC;
-		frameNode.value.setRad(elementRad);
+		float smoothingRad = frameNode.value.getRad() + (elementRad - frameNode.value.getRad())*0.3;
+		frameNode.value.setRad(smoothingRad);
 	}
 	for (BoardFrameNode& frameNode : m_boardFrame.lstInlineFrameNodes)
 	{
 		float originToElementLength = length(frameNode.value.pos - this->m_vPos);
 		float elementRad = constA * pow(originToElementLength, 2) + constB*originToElementLength + constC;
-		frameNode.value.setRad(elementRad);
+		float smoothingRad = frameNode.value.getRad() + (elementRad - frameNode.value.getRad() )*0.3;
+		frameNode.value.setRad(smoothingRad);
 	}
 	float originToElementLength = length(m_boardFrame.centerNode.value.pos - this->m_vPos);
 	float elementRad = constA * pow(originToElementLength, 2) + constB*originToElementLength + constC;
-	m_boardFrame.centerNode.value.setRad(elementRad);
+	float smoothingRad = m_boardFrame.centerNode.value.getRad() + (elementRad - m_boardFrame.centerNode.value.getRad())*0.3;
+	m_boardFrame.centerNode.value.setRad(smoothingRad);
+
 }
 void Board::rotateBoardOutLine(float dAngle)
 {
@@ -448,6 +452,24 @@ void Board::pushBoardRail(unsigned int pushDistance, std::vector<BoardFrameNode*
 
 	}
 }
+void Board::dropOutlineNodeToEmptyInlineNode()
+{
+	std::list<BoardFrameNode*> lstEmptyNodes = getEmptyNodes();
+	for (BoardFrameNode* frameNode : lstEmptyNodes)
+	{
+		if (frameNode->nodeLine == FRAMENODEPOS_INLINE)
+		{
+			BoardFrameNode* upperNode = &m_boardFrame.lstOutlineFrameNodes[frameNode->nodeID * 2];
+			if (upperNode->isEmpty() == false)
+			{
+				upperNode->value.isRotated = false;
+				frameNode->value.isRotated = false;
+				frameNode->setElement(upperNode->value);
+				upperNode->removeElement();
+			}
+		}
+	}
+}
 
 /************************************************************************************************/
 /*********************************M E C H A N I C S**********************************************/
@@ -568,6 +590,7 @@ std::list<ChainBunch> Board::getChainedNodesInBoard()
 	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
 	{
 		if (isOutlineNodeDeactivated[i] == true) continue;
+		if (m_boardFrame.lstOutlineFrameNodes[i].value.getType() == BOARDELEMENTTYPE_EMPTY) continue;
 
 		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM - 1) % BOARD_ELEMENT_OUTLINE_NUM;
 		unsigned int nextNodeIndex = (i + BOARD_ELEMENT_OUTLINE_NUM + 1) % BOARD_ELEMENT_OUTLINE_NUM;
@@ -602,6 +625,7 @@ std::list<ChainBunch> Board::getChainedNodesInBoard()
 	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
 	{
 		if (isInlineNodeDeactivated[i] == true) continue;
+		if (m_boardFrame.lstInlineFrameNodes[i].value.getType() == BOARDELEMENTTYPE_EMPTY) continue;
 
 		unsigned int symmericNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM/2) % BOARD_ELEMENT_INLINE_NUM;
 		unsigned int prevNodeIndex = (i + BOARD_ELEMENT_INLINE_NUM - 1) % BOARD_ELEMENT_INLINE_NUM;
@@ -679,6 +703,7 @@ void Board::update()
 	case BOARD_STATE_ROTATE: update_rotate(); break;
 	case BOARD_STATE_ROLL: update_roll(); break;
 	case BOARD_STATE_CHECK_MATCH: update_check_match(); break;
+	case BOARD_STATE_MATCHING: update_matching(); break;
 	case BOARD_STATE_SUPPLY: update_supply(); break;
 	}
 
@@ -984,21 +1009,56 @@ void Board::update_check_match()
 		m_boardState = BOARD_STATE_MATCHING;
 	else 
 		m_boardState = BOARD_STATE_IDLE;
+
+	smoothReturnBoardInLine();
+	smoothReturnBoardOutLine();
+	smoothReturnBoardCenter();
+	adjustElementsSize();
 }
 void Board::update_matching()
 {
+	bool allDestroyed = true;
 	for (ChainBunch bunch : m_lstChainedBunches)
 	{
 		for (BoardFrameNode* frameNode : bunch.chainedNodes)
 		{
-			frameNode->value.setSize
+			if (!frameNode->value.isDestroyed)
+			{
+				frameNode->value.destroy();
+				allDestroyed = false;
+			}
 		}
 	}
+	if (allDestroyed)
+	{
+		m_boardState = BOARD_STATE_SUPPLY;
+		m_lstChainedBunches.clear();
+	}
+	smoothReturnBoardInLine();
+	smoothReturnBoardOutLine();
+	smoothReturnBoardCenter();
+	adjustElementsSize();
 }
 void Board::update_supply()
-
 {
 
+	//drop to center
+	dropOutlineNodeToEmptyInlineNode();
+
+	std::list<BoardFrameNode*> lstEmptyNodes = getEmptyNodes();
+	for (BoardFrameNode* frameNode : lstEmptyNodes)
+	{
+		frameNode->value.setWithRandomType();
+		if (frameNode->nodeLine == FRAMENODEPOS_CENTER)
+		{
+			frameNode->value.setRad(frameNode->value.getRad() * 2);
+		}
+		frameNode->value.pos = (frameNode->nodePos - m_vPos)*1.5f + m_vPos;
+		frameNode->value.isRotated = false;
+		frameNode->value.isDestroyed = false;
+	}
+
+	m_boardState = BOARD_STATE_CHECK_MATCH;
 }
 
 /************************************************************************************************/
@@ -1117,4 +1177,27 @@ unsigned int Board::getLinearDistanceBetweenNodes(BoardFrameNode* node_1, BoardF
 		else if (node_2->nodeLine == FRAMENODEPOS_INLINE) distance = 1;
 	}
 	return distance;
+}
+
+std::list<BoardFrameNode*> Board::getEmptyNodes()
+{
+	std::list<BoardFrameNode*> lstEmptyNodes;
+	for (int i = 0; i < BOARD_ELEMENT_OUTLINE_NUM; ++i)
+	{
+		if (m_boardFrame.lstOutlineFrameNodes[i].isEmpty())
+		{
+			lstEmptyNodes.push_back(&m_boardFrame.lstOutlineFrameNodes[i]);
+		}
+	}
+	for (int i = 0; i < BOARD_ELEMENT_INLINE_NUM; ++i)
+	{
+		if (m_boardFrame.lstInlineFrameNodes[i].isEmpty())
+		{
+			lstEmptyNodes.push_back(&m_boardFrame.lstInlineFrameNodes[i]);
+		}
+	}
+	if(m_boardFrame.centerNode.isEmpty())
+		lstEmptyNodes.push_back(&m_boardFrame.centerNode);
+
+	return lstEmptyNodes;
 }

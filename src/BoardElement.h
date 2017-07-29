@@ -12,6 +12,9 @@ enum ElementType
 	BOARDELEMENTTYPE_4,
 	BOARDELEMENTTYPE_5,
 	BOARDELEMENTTYPE_6,
+	BOARDELEMENTTYPE_7,
+	BOARDELEMENTTYPE_8,
+	BOARDELEMENTTYPE_9,
 	BOARDELEMENTTYPE_TOTAL_COUNT,
 };
 
@@ -28,6 +31,7 @@ public:
 	float				getRad();
 	void				setRad(float rad);
 	const ElementType	getType();
+	void				setWithRandomType();
 
 	void destroy();
 	void render(sf::RenderWindow* pWindow);
